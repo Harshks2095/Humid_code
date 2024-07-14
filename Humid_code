@@ -1,0 +1,79 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+
+//#include <Serial.h>
+int RelayPin1 = 6; //say for water 
+int RelayPin2 = 7; // say for silica
+int RelayPin3 = 8; // say for pump
+
+Adafruit_BME280 bme;
+
+int Hum_min = 20 ;
+int Hum_max = 22 ;
+
+
+void setup() {
+
+  pinMode(RelayPin1, OUTPUT);
+  pinMode(RelayPin2, OUTPUT);
+  pinMode(RelayPin3, OUTPUT);
+	Serial.begin(9600);
+
+	if (!bme.begin(0x76)) {
+		Serial.println("Could not find a valid BME280 sensor, check wiring!");
+		while (1);
+	}
+}
+
+void loop() {
+
+	Serial.print("Humidity = ");
+	Serial.print(bme.readHumidity());
+	Serial.println("%");
+
+  Serial.print("Temperature = ");
+	Serial.print(bme.readTemperature());
+	Serial.println("*C");
+
+  Serial.print("Pressure = ");
+	Serial.print(bme.readPressure() / 100.0F);
+	Serial.println("hPa");
+
+
+	delay(1000);
+	
+	// Let's turn off the relay...
+
+  if(Hum_min<(bme.readHumidity()) && Hum_max>(bme.readHumidity()))
+  {
+    digitalWrite(RelayPin1, HIGH);
+    digitalWrite(RelayPin2, HIGH);
+    digitalWrite(RelayPin3, HIGH);
+    Serial.println("Humidity is in control");
+	  delay(1000);
+  }
+
+  if((bme.readHumidity())>Hum_max)
+  {
+    digitalWrite(RelayPin1, HIGH);
+    digitalWrite(RelayPin2, LOW);
+    digitalWrite(RelayPin3, LOW);
+    Serial.println("Humidity is more than required");
+	  delay(1000);
+  }
+
+  if((bme.readHumidity())<Hum_min)
+  {
+    digitalWrite(RelayPin1, LOW);
+    digitalWrite(RelayPin2, HIGH);
+    digitalWrite(RelayPin3, LOW);
+    Serial.println("Humidity is less than required");
+	  delay(1000);
+  }
+
+	Serial.println();
+	delay(1000);
+}
